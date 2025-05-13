@@ -2,52 +2,76 @@
 % Autor: Grupa 1A
 % Data: \today
 
+# Cześć 1
 # Wprowadzenie do gry Air Hockey
 
-## 1. Podstawowe zasady gry
+## 1. Opis gry
 
-Air Hockey to dynamiczna gra zręcznościowa rozgrywana między dwoma graczami, w której celem jest zdobywanie punktów poprzez umieszczenie krążka w bramce przeciwnika.
+Air hockey - gra, gdzie dwóch graczy odbija krążek przy użyciu okrągłej rakietki i
+próbuje wbić go do bramki przeciwnika. Gra znana z automatów do gier występujących
+powszechnie w Polsce.
+Przykładowa plansza cyfrowej wersji air hockeya, gdzie czerwone i niebieskie kółko to gracz
+A i gracz B, a czarne kółko to krążek, bramki to prostokąty po przeciwnych stronach planszy.
 
-### 1.1. Cel gry
-- Każdy gracz kontroluje wirtualną paletkę
-- Zadaniem jest odbijanie krążka tak, by trafił do bramki przeciwnika
-- Gra toczy się do osiągnięcia określonej liczby punktów (np. 7)
+![Air Hockey](hockey.png)
 
-### 1.2. Elementy gry:
-- **Boisko**: Prostokątna powierzchnia z wyznaczonymi bramkami
-- **Krążek**: Mobilny element, który gracze odbijają
-- **Paletki**: Elementy sterowane przez graczy
-- **System punktacji**: Licznik punktów dla każdego gracza
+### Zasady gry
+
+Gracze odbijają krążek rakietami i starają się wbić go do bramki przeciwnika. Krążek
+można odbijać od ścian. Ruch rakietki jest ograniczono tylko do połowy boiska
+należącej do gracza. Siła, z jaką odbity jest krążek od rakietki jest zależna od
+prędkości z jaką został trafiony. Za każdą bramkę gracz dostaje 1 punkt, mecz trwa
+skończoną ilość czasu ustaloną przez graczy na starcie i wygrywa gracz mający
+więcej punktów. W przypadku takiej samej ilości punktów gra kończy się remisem.
+
+### Sterowanie
+
+Rakietki są poruszane przy pomocy myszki. Czułość myszy jest odgórnie
+ograniczona, aby nie dawać przewagi graczowi z wysoką czułością myszy.
+
+## 2. Synchronizacja
+
+Pakiety wysyłane są co tick logiki gry. Gracz wysyła do serwera swój input w postaci
+początkowej pozycji myszki i wektora przesunięcia, lub pozycji końcowej myszki.
+Pakiety są przesyłane protokołem TCP pomiędzy graczami i serwerem. Obaj gracze
+są traktowani jednakowo i nie komunikują się z sobą, a jedynie z serwerem. Serwer
+odsyła do gracza co tick aktualny stan gry w postaci pozycji i wektorów ruchu
+rakietek i krążka. Wysyłane też są informacje o grze, takie jak wynik i czas do końca
+rozgrywki.
+
+## 3. Protokół
+
+Pakiety przesyłane są protokołem TCP, ponieważ dla aplikacji tej skali nie
+jest wymagana wydajność i szybkość UDP, a implementacja komunikacji TCP jest już
+nam znana.
+
+## 4. Logika gry
+
+Logika gry wykonywana jest zarówno na serwerze, jak i lokalnie u gracza. Zapewnia
+to płynną symulację lokalnie oczekując na pakiety z serwera. Gracz wysyła do
+serwera informacje o podjętych decyzjach (input) i czekając na odpowiedź serwera
+wylicza następny tick na podstawie informacji jakie posiada. Po przeliczeniu
+porównuje wartości z wartościami otrzymanymi od serwera i poprawia ewentualne
+błędy po swojej stronie. Serwer prowadzi symulację gry, gdzie wylicza następny stan
+gry na podstawie informacji otrzymanych od użytkowników. Poza prowadzeniem
+symulacji nadrzędnej do tych u klientów zajmuje się też zarządzaniem pokojem gry
+(połączenie obu graczy ze sobą) i rozwiązuje konflikty między graczami.
+
+## 5. Architektura
+
+Gra implementuje architekturę serwer-klient, ponieważ jest ona prostsza w
+implementacji, ponieważ obaj gracze znają jedynie ip serwera i nie muszą
+komunikować się między sobą. Rozwiązanie p2p wymagałoby TCP hole-punching
+aby gracze mogli wysyłać pomiędzy sobą pakiety poprzez router domowy, co nie jest
+wspierane przez wszystkie urządzenia.
 
 ---
+# Cześć 2
+### **Diagram sekwencyji**
 
-## 2. Model komunikacji z serwerem
+Diagram sekwencji klas naszego projektu:
 
-W celu komunikacji z serwerem zastosowaliśmy protokół **TCP (Transmission Control Protocol)**. Główne zalety tego rozwiązania:
-
-1. **Niezawodność transmisji**:
-   - Automatyczne wykrywanie i retransmisja zgubionych pakietów
-   - Gwarancja dostarczenia danych w prawidłowej kolejności
-   - Mechanizmy kontroli integralności danych
-
-2. **Kontrola przepływu**:
-   - Dynamiczne dostosowanie szybkości transmisji
-   - Zapobieganie przeciążeniom sieci
-   - Optymalizacja wykorzystania dostępnego pasma
-
-3. **Dopasowanie do wymagań projektu**:
-   - Idealne rozwiązanie dla gier 2-4 graczy
-   - Wystarczająca przepustowość dla gry typu air hockey
-   - Niskie opóźnienia w sieciach lokalnych
-
-4. **Bezpieczeństwo**:
-   - Nawiązywanie połączeń z potwierdzeniem
-   - Mechanizmy unikania przeciążeń (congestion control)
-   - Możliwość łatwej integracji z warstwą szyfrującą (TLS)
-
----
-
-### **Schemat działania**
+![diagram sekwencyjny](diagram2.png)
 
 1. **Dołączenie do gry:**
    - Gracze (`Client_1`, `Client_2`) łączą się z lobby gry (`joinLobby()`).
@@ -66,10 +90,16 @@ W celu komunikacji z serwerem zastosowaliśmy protokół **TCP (Transmission Con
    - Serwer ogłasza wyniki (`displayResults()`), np. po osiągnięciu limitu punktów.
    - Gracze mogą ponownie dołączyć do lobby (`joinLobby()`), aby zagrać kolejną rundę.
 
----
-
-### **Diagram sekwencyjny**
-![diagram sekwencyjny](diagram1.png)
-
 ### **Diagram klas**
-![diagram klas](diagram2.png)
+
+Diagram klas naszego projektu:
+
+![diagram klas](diagram1.png)
+
+
+- Client -  Reprezentuje klienta połączonego z serwerem.
+- Server - Obsługuje połączenia klientów i uruchamia grę.
+- Game -  Główna logika rozgrywki.
+- GameState - Stan i logika aktualnej sesji gry.
+- Player -  Reprezentuje gracza.
+- Ball - Obiekt piłki w grze.
