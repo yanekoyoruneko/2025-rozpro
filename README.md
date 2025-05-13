@@ -65,6 +65,7 @@ komunikować się między sobą. Rozwiązanie p2p wymagałoby TCP hole-punching
 aby gracze mogli wysyłać pomiędzy sobą pakiety poprzez router domowy, co nie jest
 wspierane przez wszystkie urządzenia.
 
+\newpage
 ---
 # Cześć 2
 ### **Diagram sekwencyji**
